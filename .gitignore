@@ -1,0 +1,41 @@
+# Стандартные игнорируемые файлы и директории
+.DS_Store
+.idea/
+*.swp
+*.swo
+*~
+Thumbs.db
+
+# Логи и временные файлы
+*.log
+*.tmp
+*.temp
+
+# Файлы зависимостей
+node_modules/
+vendor/
+.env
+.env.local
+.env.*.local
+
+# Файлы сборки и бинарники
+/dist/
+/build/
+*.exe
+*.dll
+*.so
+*.o
+
+# Документация
+/docs/_build/
+
+# SQLite базы данных
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# Конфигурационные файлы (если они содержат чувствительные данные)
+config.yaml
+/config.yaml
+local.yaml
