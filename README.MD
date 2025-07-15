@@ -70,7 +70,7 @@ http_server:
   user: "test"
   # Пароль для Basic Auth
   password: "test"
-
+```
 
 ## 📋 Использование 
 
