@@ -35,7 +35,6 @@ func main() {
 	storage, err := sqlite.New(cfg.StoragePath)
 	if err != nil {
 		log.Error("failed to init storage", slog.Any("error", err))
-		// можно return, но при os.Exit(1)-видно, что приложение упало с ошибкой.
 		os.Exit(1)
 	}
 
@@ -44,21 +43,21 @@ func main() {
 	// TODO: init router: chi, chi render
 	router := chi.NewRouter()
 
-	// TODO: middleware
-	// присваивание каждому запросу своего ID
+	// TODO: add middleware
+	// Assigns a unique ID to each request for tracking
 	router.Use(middleware.RequestID)
 
-	// логирование запросов в хендлере
+	// Logs all incoming requests (handler-level logging)
 	router.Use(mwLogger.New(log))
 
-	// восстановление паники в хендлере(из за одного панического запроса не должно падать всё приложение)
+	// Recovers from panics to prevent app-wide crashes
 	router.Use(middleware.Recoverer)
 
-	// подключение красивых URL к роутеру
+	// Enables clean URL routing (e.g., /resource/{id})
 	router.Use(middleware.URLFormat)
 
 	router.Get("/{alias}", redirect.New(log, storage))
-	// общий префикс для группы модифицирующих операция url и подключение авторизации
+	// Enables BasicAuth
 	router.Route("/url", func(r chi.Router) {
 		r.Use(middleware.BasicAuth("url-shortener", map[string]string{
 			cfg.HTTPServer.User: cfg.HTTPServer.Password,
@@ -74,12 +73,13 @@ func main() {
 	srv := &http.Server{
 		Addr:         cfg.Addres,
 		Handler:      router,
-		ReadTimeout:  cfg.HTTPServer.Timeout, //время чтения запроса
-		WriteTimeout: cfg.HTTPServer.Timeout, // время отправки ответа и прочтения клиентом
+		ReadTimeout:  cfg.HTTPServer.Timeout,
+		WriteTimeout: cfg.HTTPServer.Timeout,
 		IdleTimeout:  cfg.HTTPServer.Idletimeout,
 	}
 
-	// это блокирующий вызов и код после не должен быть выполнен, если выполнен, то произошла ошибка и сервер остановился
+	// This is a blocking call - code below will only execute if server fails
+	// If you see this log, it means the server crashed unexpectedly
 	if err := srv.ListenAndServe(); err != nil {
 		log.Error("failed to start server")
 	}

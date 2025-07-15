@@ -85,10 +85,8 @@ func TestRedirectHandler(t *testing.T) {
 			require.Equal(t, tc.wantStatus, rr.Code)
 
 			if tc.wantStatus == http.StatusFound {
-				// Для редиректа проверяем статус и заголовок Location
 				require.Equal(t, tc.mockReturnURL, rr.Header().Get("Location"))
 			} else {
-				// Для остальных случаев парсим JSON и проверяем тело
 				var resp response.Response
 				err = json.Unmarshal(rr.Body.Bytes(), &resp)
 				require.NoError(t, err)

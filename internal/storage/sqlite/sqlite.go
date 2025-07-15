@@ -53,9 +53,9 @@ func (s *Storage) SaveURL(urlToSave string, alias string) (int64, error) {
 
 	res, err := stmt.Exec(urlToSave, alias)
 	if err != nil {
-		/* Проверяем, является ли ошибка нарушением уникального ограничения (UNIQUE constraint)
-		* Если да - возвращаем кастомную ошибку storage.ErrURLExists,
-		* чтобы хендлер мог отправить клиенту соответствующий HTTP-статус (409 Conflict) */
+		// Check if error is a UNIQUE constraint violation
+		// If true - return custom storage.ErrURLExists error
+		// so handler can respond with proper HTTP status (409 Conflict)
 		if sqliteErr, ok := err.(sqlite3.Error); ok && sqliteErr.ExtendedCode == sqlite3.ErrConstraintUnique {
 			return 0, fmt.Errorf("%s: %w", fn, storage.ErrURLExists)
 		}

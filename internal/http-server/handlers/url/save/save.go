@@ -46,8 +46,6 @@ func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 
 		err := render.DecodeJSON(r.Body, &req)
 		if errors.Is(err, io.EOF) {
-			// Такую ошибку встретим, если получили запрос с пустым телом.
-			// Обработаем её отдельно
 			log.Error("request body is empty")
 			render.JSON(w, r, resp.Error("empty request"))
 			return
@@ -61,14 +59,15 @@ func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 
 		log.Info("request body decoded", slog.Any("request", req))
 
-		/*создание нового валидатора, валидируем структуру req, если он найдет ошибки
-		он вернет ошибки validator.ValidationErrors типа, мы логируем эту ошибку(или несколько ошибок
-		если были проблемы в валидации нескольких полей)
-		и формируем готовый ответ для пользователя функией ValidationError */
+		// Create new validator and validate request structure
+		// If validation fails:
+		// 1. Logs the validation error(s) (may contain multiple field errors)
+		// 2. Returns user-friendly validation error response using resp.ValidationError
 		if err := validator.New().Struct(req); err != nil {
 			validateErr := err.(validator.ValidationErrors)
 			log.Error("invalid request", slog.Any("error", err))
-			//resp.ValidationError - проверка ошибки валидатора и вывод человекочитаемой ошибки
+
+			// Convert validator errors to client-friendly format and send response
 			render.JSON(w, r, resp.ValidationError(validateErr))
 			return
 		}

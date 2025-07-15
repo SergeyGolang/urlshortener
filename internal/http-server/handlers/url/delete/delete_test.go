@@ -74,48 +74,36 @@ func TestDeleteHandler(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			// 1. Инициализация мока
 			urlDeleterMock := mocks.NewURLDeleter(t)
 
-			// 2. Настройка мока только если он должен вызываться
 			if tc.mockCalled {
 				urlDeleterMock.On("DeleteURL", tc.alias).
 					Return(tc.mockError).
 					Once()
 			}
 
-			// 3. Создание обработчика
 			handler := delete.New(slogdiscard.NewDiscardLogger(), urlDeleterMock)
 
-			// 4. Создание запроса
 			req, err := http.NewRequest(http.MethodDelete, "/", nil)
-			// Проверка отстутсвия ошибки в req, если есть ошибка, то мы тест остановится и упадёт
 			require.NoError(t, err)
 
-			// 5. Установка параметров маршрута для chi
 			rctx := chi.NewRouteContext()
 			rctx.URLParams.Add("alias", tc.alias)
 			req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
 
-			// 6. Создание ResponseRecorder
 			rr := httptest.NewRecorder()
 
-			// 7. Вызов обработчика
 			handler.ServeHTTP(rr, req)
 
-			// 8. Проверка статус кода
 			require.Equal(t, tc.wantStatus, rr.Code)
 
-			// 9. Декодирование ответа
 			var resp response.Response
 			err = json.Unmarshal(rr.Body.Bytes(), &resp)
 			require.NoError(t, err)
 
-			// 10. Проверка тела ответа
 			require.Equal(t, tc.wantResponse.Status, resp.Status)
 			require.Equal(t, tc.wantResponse.Error, resp.Error)
 
-			// 11. Проверка вызовов мока
 			if tc.mockCalled {
 				urlDeleterMock.AssertExpectations(t)
 			}

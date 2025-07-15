@@ -32,7 +32,19 @@ func Error(msg string) Response {
 
 }
 
-// ошибки при валидировании данных
+/*
+	ValidationError converts validator.ValidationErrors into a client-friendly format.
+
+For each validation error, it generates specific messages based on the validation tag:
+  - "required": indicates missing required field
+  - "url": indicates invalid URL format
+  - default: generic invalid field message
+
+Example output:
+
+	"field email is required, field website is not a valid URL"
+*/
+
 func ValidationError(errs validator.ValidationErrors) Response {
 	var errMsgs []string
 

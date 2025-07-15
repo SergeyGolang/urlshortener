@@ -14,36 +14,37 @@ import (
 	"urlshortener/lib/random"
 )
 
-// совпадение с host в конфиге
+// Matches host in config
 const (
 	host = "localhost:8082"
 )
 
+// TestURLShortener_HappyPath tests successful URL shortening scenario
 func TestURLShortener_HappyPath(t *testing.T) {
-	// формирование базового URL к которму будет обращаться клиент
+	// Base URL for test requests
 	u := url.URL{
 		Scheme: "http",
 		Host:   host,
 	}
 
-	// создание клиента с помощью которого будут выполняться запросы
+	// Create HTTP test client
 	e := httpexpect.Default(t, u.String())
 
+	// Test successful URL creation
 	e.POST("/url").
 		WithJSON(save.Request{
 			URL:   gofakeit.URL(),
 			Alias: random.NewRandomString(10),
 		}).
 		WithBasicAuth("myuser", "mypass").
-		// Expect - что мы ожидаем от ответа
 		Expect().
-		Status(200).
+		Status(http.StatusOK).
 		JSON().Object().
-		// Содержание параметра alias
-		ContainsKey("alias")
+		ContainsKey("alias") // Verify response contains alias field
 }
 
-//nolint:funlen
+// TestURLShortener_SaveRedirect tests various URL saving and redirect scenarios
+// nolint:funlen
 func TestURLShortener_SaveRedirect(t *testing.T) {
 	testCases := []struct {
 		name  string
@@ -52,22 +53,25 @@ func TestURLShortener_SaveRedirect(t *testing.T) {
 		error string
 	}{
 		{
-			name:  "Valid URL",
+			name:  "Valid URL with custom alias",
 			url:   gofakeit.URL(),
 			alias: gofakeit.Word() + gofakeit.Word(),
 		},
 		{
-			name:  "Invalid URL",
+			name:  "Invalid URL format",
 			url:   "invalid_url",
 			alias: gofakeit.Word(),
 			error: "field URL is not a valid URL",
 		},
 		{
-			name:  "Empty Alias",
+			name:  "Empty alias (should generate random)",
 			url:   gofakeit.URL(),
 			alias: "",
 		},
-		// TODO: add more test cases
+		// TODO: Add more test cases:
+		// - Duplicate alias
+		// - Very long URL
+		// - Special characters in alias
 	}
 
 	for _, tc := range testCases {
@@ -79,8 +83,7 @@ func TestURLShortener_SaveRedirect(t *testing.T) {
 
 			e := httpexpect.Default(t, u.String())
 
-			// Save
-
+			// --- Save URL Test ---
 			resp := e.POST("/url").
 				WithJSON(save.Request{
 					URL:   tc.url,
@@ -91,45 +94,40 @@ func TestURLShortener_SaveRedirect(t *testing.T) {
 				JSON().Object()
 
 			if tc.error != "" {
-				// если в тест кейсе ожидаем ошибку, то проверяем отсутствие alias в ответе
+				// Verify error response for invalid cases
 				resp.NotContainsKey("alias")
-				// проверяем наличие поле ошибки и сравниваем с кейсовой ошибкой
 				resp.Value("error").String().IsEqual(tc.error)
-
 				return
 			}
 
 			alias := tc.alias
-
 			if tc.alias != "" {
+				// Verify custom alias was used
 				resp.Value("alias").String().IsEqual(tc.alias)
 			} else {
+				// Verify random alias was generated
 				resp.Value("alias").String().NotEmpty()
-				// сохраняем alias, по которому нужно потом обратиться для редиректа
 				alias = resp.Value("alias").String().Raw()
 			}
 
-			// Redirect
-			u = url.URL{
+			// --- Redirect Test ---
+			redirectURL := url.URL{
 				Scheme: "http",
 				Host:   host,
 				Path:   alias,
 			}
 
-			redirectedToURL, err := api.GetRedirect(u.String())
+			redirectedToURL, err := api.GetRedirect(redirectURL.String())
 			require.NoError(t, err)
-
 			require.Equal(t, tc.url, redirectedToURL)
 
-			// Delete
-
+			// --- Cleanup: Delete URL ---
 			resp = e.DELETE("/url/"+alias).
 				WithBasicAuth("myuser", "mypass").
 				Expect().Status(http.StatusOK).
 				JSON().Object()
 
 			resp.Value("status").String().IsEqual("OK")
-
 		})
 	}
 }
