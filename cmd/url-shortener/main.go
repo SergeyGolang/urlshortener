@@ -57,6 +57,7 @@ func main() {
 	// подключение красивых URL к роутеру
 	router.Use(middleware.URLFormat)
 
+	router.Get("/{alias}", redirect.New(log, storage))
 	// общий префикс для группы модифицирующих операция url и подключение авторизации
 	router.Route("/url", func(r chi.Router) {
 		r.Use(middleware.BasicAuth("url-shortener", map[string]string{
@@ -66,7 +67,6 @@ func main() {
 		r.Delete("/{alias}", delete.New(log, storage))
 	})
 
-	router.Get("/{alias}", redirect.New(log, storage))
 	// TODO: run server: main
 
 	log.Info("starting server", slog.String("address", cfg.Addres))

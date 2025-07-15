@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"urlshortener/internal/http-server/handlers/url/save"
+	"urlshortener/lib/api"
 	"urlshortener/lib/random"
 )
 
@@ -33,7 +34,7 @@ func TestURLShortener_HappyPath(t *testing.T) {
 			URL:   gofakeit.URL(),
 			Alias: random.NewRandomString(10),
 		}).
-		WithBasicAuth("Myuser", "Mypassword").
+		WithBasicAuth("myuser", "mypass").
 		// Expect - что мы ожидаем от ответа
 		Expect().
 		Status(200).
@@ -52,7 +53,7 @@ func TestURLShortener_SaveRedirect(t *testing.T) {
 	}{
 		{
 			name:  "Valid URL",
-			url:   "https://example.com",
+			url:   gofakeit.URL(),
 			alias: gofakeit.Word() + gofakeit.Word(),
 		},
 		{
@@ -63,7 +64,7 @@ func TestURLShortener_SaveRedirect(t *testing.T) {
 		},
 		{
 			name:  "Empty Alias",
-			url:   "https://example.com",
+			url:   gofakeit.URL(),
 			alias: "",
 		},
 		// TODO: add more test cases
@@ -85,7 +86,7 @@ func TestURLShortener_SaveRedirect(t *testing.T) {
 					URL:   tc.url,
 					Alias: tc.alias,
 				}).
-				WithBasicAuth("Myuser", "Mypassword").
+				WithBasicAuth("myuser", "mypass").
 				Expect().Status(http.StatusOK).
 				JSON().Object()
 
@@ -109,13 +110,26 @@ func TestURLShortener_SaveRedirect(t *testing.T) {
 			}
 
 			// Redirect
-			redirectResp := e.GET("/" + alias).
-				Expect().
-				Status(http.StatusOK) // 302
+			u = url.URL{
+				Scheme: "http",
+				Host:   host,
+				Path:   alias,
+			}
 
-			// Проверяем, что редирект ведёт на исходный URL
-			location := redirectResp.Header("Location").Raw()
-			require.Equal(t, tc.url, location)
+			redirectedToURL, err := api.GetRedirect(u.String())
+			require.NoError(t, err)
+
+			require.Equal(t, tc.url, redirectedToURL)
+
+			// Delete
+
+			resp = e.DELETE("/url/"+alias).
+				WithBasicAuth("myuser", "mypass").
+				Expect().Status(http.StatusOK).
+				JSON().Object()
+
+			resp.Value("status").String().IsEqual("OK")
+
 		})
 	}
 }
