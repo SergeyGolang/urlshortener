@@ -1,0 +1,21 @@
+# Environment: local, dev, prod
+env: "local"
+
+# Path to the database file
+storage_path: "./storage/storage.db"
+
+http_server:
+  # Server address and port
+  address: "localhost:8082"
+  
+  # Request read and response write timeout (e.g., 4s = 4 seconds)
+  timeout: 4s
+  
+  # Idle connection timeout (e.g., 60s = 60 seconds)
+  idle_timeout: 60s
+  
+  # Username for basic authentication
+  user: "test"
+  
+  # Password for basic authentication
+  password: "test"
