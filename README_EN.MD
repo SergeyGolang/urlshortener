@@ -70,8 +70,9 @@ http_server:
   user: "test"
   # Password for Basic Auth
   password: "test"
+```
 
-##📋 Usage
+## 📋 Usage
 
 Create a short link:
 
@@ -96,3 +97,7 @@ go test -v ./...
 
 ## ⚠️ Important!
 Do not commit local.yaml to git!
+
+## Creater
+
+https://github.com/SergeyGolang

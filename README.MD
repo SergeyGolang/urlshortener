@@ -102,3 +102,7 @@ go test -v ./...
 
 Не коммитьте local.yaml в git!
 
+## Разработчик
+
+https://github.com/SergeyGolang
+
