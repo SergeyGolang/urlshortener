@@ -28,7 +28,7 @@ func TestDeleteHandler(t *testing.T) {
 		mockCalled   bool
 	}{
 		{
-			name:  "Success",
+			name:  "Delete success",
 			alias: "test_alias",
 			wantResponse: response.Response{
 				Status: response.StatusOK,

@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"os"
 	"urlshortener/internal/config"
-	redirect "urlshortener/internal/http-server/handlers/redirect"
 	delete "urlshortener/internal/http-server/handlers/url/delete"
+	redirect "urlshortener/internal/http-server/handlers/url/redirect"
 	save "urlshortener/internal/http-server/handlers/url/save"
 	"urlshortener/internal/storage/sqlite"
 
