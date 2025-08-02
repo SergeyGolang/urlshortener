@@ -12,6 +12,8 @@ type Config struct {
 	Env         string `yaml:"env" env-default:"local"`
 	StoragePath string `yaml:"storage_path" env-requered:"True"`
 	HTTPServer  `yaml:"http_server"`
+	Clients     ClientsConfig `yaml:"clients"`
+	AppSecret   string        `yaml:"app_secret" env-required:"true" env:"APP_SECRET"`
 }
 
 type HTTPServer struct {
@@ -20,6 +22,16 @@ type HTTPServer struct {
 	Idletimeout time.Duration `yaml:"idle_timeout " env-default:"60s"`
 	User        string        `yaml:"user" env-requered:"true"`
 	Password    string        `yaml:"password" env-requered:"true" env:"HTTP_SERVER_PASSWORD"`
+}
+
+type Client struct {
+	Address      string        `yaml:"address"`
+	Timeout      time.Duration `yaml:"timeout"`
+	RetriesCount int           `yaml:"retriesCount"`
+}
+
+type ClientsConfig struct {
+	SSO Client `yaml:"sso"`
 }
 
 // MustLoad loads configuration from file into Config struct.
